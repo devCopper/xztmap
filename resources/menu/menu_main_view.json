@@ -1,0 +1,20 @@
+[
+	{
+		"groupName":"View",
+		"style":8,
+		"text":"Zoom In",
+		"listener":"com.ztmap.ui.listener.view.ZoomInListener"
+	},
+	{
+		"groupName":"View",
+		"style":8,
+		"text":"Zoom Out",
+		"listener":"com.ztmap.ui.listener.view.ZoomOutListener"
+	},
+	{
+		"groupName":"View",
+		"style":8,
+		"text":"Pan",
+		"listener":"com.ztmap.ui.listener.view.PanListener"
+	}
+]

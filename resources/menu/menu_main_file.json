@@ -1,0 +1,22 @@
+[
+	{
+		"style":8,
+		"text":"New Map",
+		"listener":"com.ztmap.ui.listener.map.NewMapListener"
+	},
+	{
+		"style":8,
+		"text":"Open Map",
+		"listener":"com.ztmap.ui.listener.map.OpenMapListener"
+	},
+	{
+		"style":8,
+		"text":"Save Map",
+		"listener":"com.ztmap.ui.listener.map.SaveMapListener"
+	},
+	{
+		"style":8,
+		"text":"Save As Map",
+		"listener":"com.ztmap.ui.listener.map.SaveAsMapListener"
+	}
+]

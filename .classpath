@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.swt.win32.win32.x86_64_3.105.3.v20170228-0512.jar"/>
+	<classpathentry kind="lib" path="lib/fastjson-1.2.6.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-2.5.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang-2.6.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-cql-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-data-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-main-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-metadata-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-epsg-wkt-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-referencing-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-shapefile-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/geotools-17.1/gt-render-17.1.jar"/>
+	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

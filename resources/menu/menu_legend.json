@@ -1,0 +1,7 @@
+[
+	{
+		"style":8,
+		"text":"Zoom To Legend",
+		"listener":"com.ztmap.ui.listener.layer.ZoomToLayerListener"
+	}
+]
