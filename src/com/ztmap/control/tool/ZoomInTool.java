@@ -1,64 +1,44 @@
 package com.ztmap.control.tool;
 
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
-
 import java.awt.geom.Point2D;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Cursor;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.Envelope2D;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 
 import com.ztmap.control.event.MapMouseEvent;
 import com.ztmap.control.utils.CursorManager;
+import com.ztmap.control.utils.Utils;
 
 public class ZoomInTool extends ZoomTool {
 
-	/** Tool name */
 	public static final String TOOL_NAME = "Zoom In";
-	/** Tool tip text */
 	public static final String TOOL_TIP = "Zoom In Map";
 
 	private Cursor cursor;
 
-	private Point2D startDragPos;
+	private Point2D startMapPos;
+	private Point startPos;
 	private boolean dragged;
 
-	/**
-	 * Constructs a new zoom in tool. To activate the tool only on certain mouse
-	 * events provide a single mask, e.g. {@link SWT#BUTTON1}, or a combination
-	 * of multiple SWT-masks.
-	 *
-	 * @param triggerButtonMask
-	 *            Mouse button which triggers the tool's activation or
-	 *            {@value #ANY_BUTTON} if the tool is to be triggered by any
-	 *            button
-	 */
 	public ZoomInTool(int triggerButtonMask) {
 		super(triggerButtonMask);
 
 		cursor = CursorManager.getInstance().getZoominCursor();
 
-		startDragPos = new DirectPosition2D();
+		startMapPos = new DirectPosition2D();
 		dragged = false;
 	}
 
-	/**
-	 * Constructs a new zoom in tool which is triggered by any mouse button.
-	 */
 	public ZoomInTool() {
 		this(CursorTool.ANY_BUTTON);
 	}
 
-	/**
-	 * Zoom in by the currently set increment, with the map centred at the
-	 * location (in world coords) of the mouse click
-	 * 
-	 * @param e
-	 *            map mapPane mouse event
-	 */
 	@Override
 	public void onMouseClicked(MapMouseEvent e) {
 
@@ -66,27 +46,15 @@ public class ZoomInTool extends ZoomTool {
 			return;
 		}
 
-		startDragPos = new DirectPosition2D();
-		startDragPos.setLocation(e.getMapPosition());
+		startMapPos = new DirectPosition2D();
+		startMapPos.setLocation(e.getMapPosition());
+		startPos = e.getPoint();
 	}
 
-	/**
-	 * Records the map position of the mouse event in case this button press is
-	 * the beginning of a mouse drag
-	 *
-	 * @param ev
-	 *            the mouse event
-	 */
 	@Override
 	public void onMousePressed(MapMouseEvent ev) {
 	}
 
-	/**
-	 * Records that the mouse is being dragged
-	 *
-	 * @param ev
-	 *            the mouse event
-	 */
 	@Override
 	public void onMouseDragged(MapMouseEvent ev) {
 
@@ -94,18 +62,32 @@ public class ZoomInTool extends ZoomTool {
 			return;
 		}
 
+		if (dragged) {
+			Point endPos = ev.getPoint();
+			Rectangle clientRect = mapControl.getClientRect();
+			if (mapControl != null && !mapControl.isDisposed()) {
+				GC gc = new GC(mapControl);
+				Image swtImage = new Image(mapControl.getDisplay(),
+						Utils.awtToSwt(mapControl.getBaseImage(), clientRect.width + 1, clientRect.height + 1));
+
+				Image tmpImage = new Image(mapControl.getDisplay(), clientRect.width, clientRect.height);
+				GC tmpGC = new GC(tmpImage);
+				tmpGC.fillRectangle(0, 0, clientRect.width, clientRect.height);
+				tmpGC.drawImage(swtImage, 0, 0);
+				tmpGC.setLineWidth(lineWidth);
+				tmpGC.setLineStyle(lineStyle);
+				tmpGC.setForeground(lineColor);
+				tmpGC.drawRectangle(Math.min(startPos.x, endPos.x), Math.min(startPos.y, endPos.y),
+						Math.abs(startPos.x - endPos.x), Math.abs(startPos.y - endPos.y));
+				gc.drawImage(tmpImage, 0, 0);
+				tmpImage.dispose();
+				swtImage.dispose();
+			}
+		}
+
 		dragged = true;
 	}
 
-	/**
-	 * If the mouse was dragged, determines the bounds of the box that the user
-	 * defined and passes this to the mapPane's
-	 * {@link org.geotools.swing.JMapPane#setDisplayArea(org.opengis.geometry.Envelope) }
-	 * method
-	 *
-	 * @param ev
-	 *            the mouse event
-	 */
 	@Override
 	public void onMouseReleased(MapMouseEvent ev) {
 
@@ -115,47 +97,27 @@ public class ZoomInTool extends ZoomTool {
 
 		if (dragged) {
 			Envelope2D env = new Envelope2D();
-			env.setFrameFromDiagonal(startDragPos, ev.getMapPosition());
+			env.setFrameFromDiagonal(startMapPos, ev.getMapPosition());
 			dragged = false;
-			getMapPane().setDisplayArea(env);
+			getMapPane().setDisplayArea(new ReferencedEnvelope(env, getCRS()));
 		} else {
-			Rectangle paneArea = getMapPane().getVisibleRect();
+			Rectangle paneArea = getMapPane().getClientArea();
 
 			double scale = getMapPane().getWorldToScreenTransform().getScaleX();
 			double newScale = scale * zoom;
 
-			DirectPosition2D corner = new DirectPosition2D(startDragPos.getX() - 0.5d * paneArea.width / newScale,
-					startDragPos.getY() + 0.5d * paneArea.height / newScale);
+			DirectPosition2D corner = new DirectPosition2D(startMapPos.getX() - 0.5d * paneArea.width / newScale,
+					startMapPos.getY() + 0.5d * paneArea.height / newScale);
 
 			Envelope2D newMapArea = new Envelope2D();
-			newMapArea.setFrameFromCenter(startDragPos, corner);
-			getMapPane().setDisplayArea(newMapArea);
+			newMapArea.setFrameFromCenter(startMapPos, corner);
+			getMapPane().setDisplayArea(new ReferencedEnvelope(newMapArea, getCRS()));
 		}
 
 	}
 
-	/**
-	 * Get the mouse cursor for this tool
-	 */
 	@Override
 	public Cursor getCursor() {
 		return cursor;
-	}
-
-	public boolean canDraw() {
-		return true;
-	}
-
-	public boolean canMove() {
-		return false;
-	}
-
-	@Override
-	public boolean isDrawing() {
-		return dragged;
-	}
-
-	public static double pythagoras(double d1, double d2) {
-		return sqrt(pow(d1, 2.0) + pow(d2, 2.0));
 	}
 }

@@ -1,56 +1,38 @@
 package com.ztmap.control.tool;
 
-import org.eclipse.swt.SWT;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+
 import org.eclipse.swt.graphics.Cursor;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 
 import com.ztmap.control.event.MapMouseEvent;
 import com.ztmap.control.utils.CursorManager;
+import com.ztmap.control.utils.Utils;
 
 public class PanTool extends CursorTool {
 
-	/** Tool name */
 	public static final String TOOL_NAME = "Pan";
-	/** Tool tip text */
 	public static final String TOOL_TIP = "Pan Map";
-
 	private Cursor cursor;
+	private Point startPos;
+	private Point endPos;
+	private boolean panning;
 
-	private Point panePos;
-	boolean panning;
-
-	/**
-	 * Constructs a new pan tool. To activate the tool only on certain mouse
-	 * events provide a single mask, e.g. {@link SWT#BUTTON1}, or a combination
-	 * of multiple SWT-masks.
-	 *
-	 * @param triggerButtonMask
-	 *            Mouse button which triggers the tool's activation or
-	 *            {@value #ANY_BUTTON} if the tool is to be triggered by any
-	 *            button
-	 */
 	public PanTool(int triggerButtonMask) {
 		super(triggerButtonMask);
-
 		cursor = CursorManager.getInstance().getPanCursor();
-
 		panning = false;
 	}
 
-	/**
-	 * Constructs a new pan tool which is triggered by any mouse button.
-	 */
 	public PanTool() {
 		this(CursorTool.ANY_BUTTON);
 	}
 
-	/**
-	 * Respond to a mouse button press event from the map mapPane. This may
-	 * signal the start of a mouse drag. Records the event's window position.
-	 * 
-	 * @param ev
-	 *            the mouse event
-	 */
 	@Override
 	public void onMousePressed(MapMouseEvent ev) {
 
@@ -58,56 +40,57 @@ public class PanTool extends CursorTool {
 			return;
 		}
 
-		panePos = ev.getPoint();
+		startPos = ev.getPoint();
 		panning = true;
 	}
 
-	/**
-	 * Respond to a mouse dragged event. Calls
-	 * {@link org.geotools.swing.JMapPane#moveImage()}
-	 * 
-	 * @param ev
-	 *            the mouse event
-	 */
 	@Override
 	public void onMouseDragged(MapMouseEvent ev) {
 		if (panning) {
-			Point pos = ev.getPoint();
-			if (!pos.equals(panePos)) {
-				getMapPane().moveImage(pos.x - panePos.x, pos.y - panePos.y);
-				panePos = pos;
+			endPos = ev.getPoint();
+			if (!endPos.equals(startPos)) {
+				Rectangle clientRect = mapControl.getClientRect();
+				if (mapControl != null && !mapControl.isDisposed()) {
+					Image swtImage = new Image(mapControl.getDisplay(),
+							Utils.awtToSwt(mapControl.getBaseImage(), clientRect.width + 1, clientRect.height + 1));
+
+					GC gc = new GC(mapControl);
+					Image tmpImage = new Image(mapControl.getDisplay(), clientRect.width, clientRect.height);
+					GC tmpGc = new GC(tmpImage);
+					tmpGc.fillRectangle(0, 0, clientRect.width, clientRect.height);
+					tmpGc.drawImage(swtImage, endPos.x - startPos.x, endPos.y - startPos.y);
+					gc.drawImage(tmpImage, 0, 0);
+					tmpImage.dispose();
+					swtImage.dispose();
+				}
 			}
 		}
 	}
 
-	/**
-	 * If this button release is the end of a mouse dragged event, requests the
-	 * map mapPane to repaint the display
-	 * 
-	 * @param ev
-	 *            the mouse event
-	 */
 	@Override
 	public void onMouseReleased(MapMouseEvent ev) {
-		if (panning) {
-			panning = false;
-			getMapPane().redraw();
+		if (panning && endPos != null && !endPos.equals(startPos)) {
+			AffineTransform screenToWorldTransform = getMapPane().getScreenToWorldTransform();
+			screenToWorldTransform.translate(startPos.x - endPos.x, startPos.y - endPos.y);
+			Point2D p0 = new Point2D.Double(0, 0);
+			Point2D p1 = new Point2D.Double(mapControl.getClientRect().width, mapControl.getClientRect().height);
+			screenToWorldTransform.transform(p0, p0);
+			screenToWorldTransform.transform(p1, p1);
+
+			ReferencedEnvelope aoi = new ReferencedEnvelope(Math.min(p0.getX(), p1.getX()),
+					Math.max(p0.getX(), p1.getX()), Math.min(p0.getY(), p1.getY()), Math.max(p0.getY(), p1.getY()),
+					getCRS());
+
+			mapControl.setDisplayArea(aoi);
+			getMapPane().redrawMap(true);
+			endPos = null;
 		}
+		panning = false;
 	}
 
-	/**
-	 * Get the mouse cursor for this tool
-	 */
 	@Override
 	public Cursor getCursor() {
 		return cursor;
 	}
 
-	public boolean canDraw() {
-		return false;
-	}
-
-	public boolean canMove() {
-		return true;
-	}
 }

@@ -29,7 +29,11 @@ import com.ztmap.ui.common.MenuFactory;
 
 public class LayerControl extends Tree {
 
-	private static final String NODE_TYPE = "type";
+	private static final String NODE_TYPE = "nodeType";
+	private static final String NODE_MAP = "map";
+	private static final String NODE_LAYER = "layer";
+	private static final String NODE_LEGEND = "legend";
+	
 	private TreeItem root = null;
 	private Menu mapMenu = null;
 	private Menu layerMenu = null;
@@ -57,30 +61,41 @@ public class LayerControl extends Tree {
 
 		this.addListener(SWT.Selection, event -> {
 			final TreeItem item = (TreeItem) event.item;
-			if (event.detail != SWT.CHECK) {
-				if (item != null && item == lastItem[0]) {
-					boolean showBorder = true;
-					final Composite composite = new Composite(this, SWT.NONE);
-					if (showBorder)
-						composite.setBackground(editBGColor);
-					final Text text = new Text(composite, SWT.NONE);
-					final int inset = showBorder ? 1 : 0;
-					composite.addListener(SWT.Resize, e1 -> {
-						Rectangle rect1 = composite.getClientArea();
-						text.setBounds(rect1.x + inset, rect1.y + inset, rect1.width - inset * 2,
-								rect1.height - inset * 2);
-					});
-					Listener textListener = getTextListener(editor, item, composite, text, inset);
-					text.addListener(SWT.FocusOut, textListener);
-					text.addListener(SWT.Traverse, textListener);
-					text.addListener(SWT.Verify, textListener);
-					editor.setEditor(composite, item);
-					text.setText(item.getText());
-					text.selectAll();
-					text.setFocus();
-				}
-				lastItem[0] = item;
+			if (item == null) {
+				return;
 			}
+			
+			if (NODE_LAYER.equals(item.getData(NODE_TYPE))) {
+				for (Layer layer : mapContent.layers()) {
+					if (layer.equals(item.getData())) {
+						layer.setSelected(true);
+					} else {
+						layer.setSelected(false);
+					}
+				}
+			}
+			
+			if (event.detail != SWT.CHECK && item == lastItem[0]) {
+				boolean showBorder = true;
+				final Composite composite = new Composite(this, SWT.NONE);
+				if (showBorder)
+					composite.setBackground(editBGColor);
+				final Text text = new Text(composite, SWT.NONE);
+				final int inset = showBorder ? 1 : 0;
+				composite.addListener(SWT.Resize, e1 -> {
+					Rectangle rect1 = composite.getClientArea();
+					text.setBounds(rect1.x + inset, rect1.y + inset, rect1.width - inset * 2, rect1.height - inset * 2);
+				});
+				Listener textListener = getTextListener(editor, item, composite, text, inset);
+				text.addListener(SWT.FocusOut, textListener);
+				text.addListener(SWT.Traverse, textListener);
+				text.addListener(SWT.Verify, textListener);
+				editor.setEditor(composite, item);
+				text.setText(item.getText());
+				text.selectAll();
+				text.setFocus();
+			}
+			lastItem[0] = item;
 		});
 
 	}
@@ -92,7 +107,7 @@ public class LayerControl extends Tree {
 
 		root = new TreeItem(this, SWT.NONE);
 		root.setText(mapContent.getTitle());
-		root.setData(NODE_TYPE, "map");
+		root.setData(NODE_TYPE, NODE_MAP);
 
 		for (Layer layer : mapContent.layers()) {
 			addLayer(layer);
@@ -103,7 +118,7 @@ public class LayerControl extends Tree {
 		if (root != null && mapContent != null) {
 			TreeItem item = new TreeItem(root, SWT.NONE);
 			item.setText(layer.getTitle());
-			item.setData(NODE_TYPE, "layer");
+			item.setData(NODE_TYPE, NODE_LAYER);
 			item.setChecked(layer.isVisible());
 			item.setData(layer);
 			root.setExpanded(true);
@@ -178,11 +193,11 @@ public class LayerControl extends Tree {
 			if (items.length <= 0) {
 				return;
 			}
-			if (items[0].getData(NODE_TYPE).equals("map")) {
+			if (NODE_MAP.equals(items[0].getData(NODE_TYPE))) {
 				this.setMenu(mapMenu);
-			} else if (items[0].getData(NODE_TYPE).equals("layer")) {
+			} else if (NODE_LAYER.equals(items[0].getData(NODE_TYPE))) {
 				this.setMenu(layerMenu);
-			} else if (items[0].getData(NODE_TYPE).equals("legend")) {
+			} else if (NODE_LEGEND.equals(items[0].getData(NODE_TYPE))) {
 				this.setMenu(legendMenu);
 			}
 		});

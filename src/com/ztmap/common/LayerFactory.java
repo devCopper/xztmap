@@ -64,7 +64,7 @@ public class LayerFactory {
 				style = StyleFactory.read(layerData.getStyle());
 			}
 
-			Layer layer = new FeatureLayer(source, style);
+			FeatureLayer layer = new FeatureLayer(source, style);
 			layer.setTitle(layerData.getName());
 			setLayerUserData(layer, layerData);
 

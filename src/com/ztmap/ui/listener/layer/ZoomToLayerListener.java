@@ -10,11 +10,15 @@ public class ZoomToLayerListener extends SelectionAdapter {
 
 	@Override
 	public void widgetSelected(SelectionEvent e) {
-		Layer layer = Application.layerControl.getSelectedLayer();
-		if (layer == null) {
+		if (Application.mapContent == null) {
 			return;
 		}
-		Application.mapControl.setDisplayArea(layer.getBounds());
+		
+		for (Layer layer : Application.mapContent.layers()) {
+			if (layer.isSelected()) {
+				Application.mapControl.setDisplayArea(layer.getBounds());
+			}
+		}
 	}
 
 }

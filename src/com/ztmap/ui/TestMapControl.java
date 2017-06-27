@@ -1,20 +1,17 @@
 package com.ztmap.ui;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.geotools.map.MapContent;
 
-import com.ztmap.control.LayerControl;
 import com.ztmap.control.MapControl;
 import com.ztmap.ui.common.MenuFactory;
 
-public class Startup {
+public class TestMapControl {
 	public static void main(String[] args) {
 		final Display display = new Display();
 		Shell shell = new Shell(display);
@@ -39,27 +36,28 @@ public class Startup {
 		Menu layerMenu = new Menu(shell, SWT.DROP_DOWN);
 		layerItem.setMenu(layerMenu);
 		MenuFactory.createMenuItems(layerMenu, "resources/menu/menu_main_layer.json");
+//
+//		SashForm form = new SashForm(shell, SWT.HORIZONTAL);
+//		form.setLayout(new FillLayout());
+//
+//		Composite leftPanel = new Composite(form, SWT.BORDER);
+//		leftPanel.setLayout(new FillLayout());
+//		LayerControl layerControl = new LayerControl(leftPanel);
 
-		SashForm form = new SashForm(shell, SWT.HORIZONTAL);
-		form.setLayout(new FillLayout());
+//		Composite rightPanel = new Composite(form, SWT.BORDER);
+//		rightPanel.setLayout(new FillLayout());
+		MapControl mapControl = new MapControl(shell, SWT.BORDER);
 
-		Composite leftPanel = new Composite(form, SWT.BORDER);
-		leftPanel.setLayout(new FillLayout());
-		LayerControl layerControl = new LayerControl(leftPanel);
-
-		Composite rightPanel = new Composite(form, SWT.BORDER);
-		rightPanel.setLayout(new FillLayout());
-		MapControl mapControl = new MapControl(rightPanel, SWT.BORDER);
-
-		mapControl.setLayerControl(layerControl);
+//		mapControl.setLayerControl(layerControl);
 
 		Application.shell = shell;
 		Application.mapControl = mapControl;
+//		Application.layerControl = layerControl;
 		Application.mapContent = new MapContent();
 		Application.mapContent.setTitle("NewMap");
 		Application.mapControl.setMapContent(Application.mapContent);
 
-		form.setWeights(new int[] { 30, 70 });
+//		form.setWeights(new int[] { 30, 70 });
 		shell.open();
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch())
